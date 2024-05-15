@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -134,7 +135,7 @@ func generateFile(tableName, outDir, prefix, removePrefix string, columns []Colu
 	}
 
 	// Define the template for the struct
-	structTemplate := `package main
+	structTemplate := `package {{.PackageName}}
 
 type {{.StructName}} struct {
 {{.Fields}}
@@ -145,6 +146,8 @@ func (this {{.StructName}}) TableName() string {
 	return "{{.TableName}}"
 }
 `
+	// 获取最后一级文件夹名
+	packageName := filepath.Base(outDir)
 
 	// Parse the template
 	tmpl, err := template.New("goStruct").Parse(structTemplate)
@@ -154,10 +157,12 @@ func (this {{.StructName}}) TableName() string {
 
 	// Execute the template with the table name and fields
 	data := struct {
-		StructName string
-		TableName  string
-		Fields     string
+		PackageName string
+		StructName  string
+		TableName   string
+		Fields      string
 	}{
+		PackageName: packageName,
 		StructName: structName,
 		TableName:  tableName,
 		Fields:     fields.String(),
